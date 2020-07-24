@@ -20,3 +20,10 @@ class DatabaseHandler(object):
         
     def readDroneGoal(self,droneState):
         pass
+    def setDroneGoal(self,droneState):
+        pass
+    """
+    return bool whenver drone achieves goal, or if cancels
+    """
+    def driveDrone(self,goal: Goal) ->bool:
+        pass

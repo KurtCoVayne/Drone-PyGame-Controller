@@ -5,15 +5,14 @@ from sys import exit
 from threading import Thread
 from urllib.parse import quote_plus
 from database import DatabaseHandler
-from drone import DroneHandler
+from drone import DroneHandler,Goal
 import pygame
 from time import sleep
 import math
-WHITE = (255, 255, 255)
-RED   = (255,   0,   0)
-GREEN = (0  , 255,   0)
-BLUE  = (0  ,   0, 255)
-class MainThread(Thread):
+from concurrent.futures.thread import ThreadPoolExecutor
+
+
+class ClientThread(Thread):
 	"""
 	
 	"""
@@ -28,22 +27,45 @@ class MainThread(Thread):
 		if not (self.droneconn.check() or self.dbconn.check):
 			raise "Drone Connection nor Database Connection didnt work"
 
-		
+class MainThread(Thread):
+	"""
+	
+	"""
+	
+	def __init__(self, drone_conf, db_conf):
+		super(MainThread,self).__init__()
+		self.dbconn = DatabaseHandler(db_conf)
+		self.drone_conf = drone_conf
+		if not self.dbconn.check():
+			raise "Drone Connection nor Database Connection didnt work"	
 	def run(self):
-		# while True:
-		# 	print("... processs main thread here, concurrent.futures call here")
-		# 	sleep(5)
-
-
+		WHITE = (255, 255, 255)
+		RED   = (255,   0,   0)
+		GREEN = (0  , 255,   0)
+		BLUE  = (0  ,   0, 255)
 		pygame.init()
 		W=500
 		H=500
+		assert W==H,"El canvas debe ser cuadrado"
+		def getGoalFromCanvasCoords(initialCoordinates,x,y,z):
+			"""
+			W = a metros
+			pixel = x
+			x= pixel*a/W
+			"""
+			lat0 = initialCoordinates[0]
+			lon0 = initialCoordinates[1]
+			pixelEquivalent = lambda pix: pix*self.drone_conf['CanvasMetric']/W
+			
+			return Goal(pixelEquivalent(x),pixelEquivalent(y),pixelEquivalent(z))
+
 		screen = pygame.display.set_mode((W, H))
 		done = False
 		paused = False
+		keep_state = False
 		pointer = (W//2,H//2)
 		myFont = pygame.font.SysFont("Times New Roman", 14)
-		z = 10
+		z = self.drone_conf['Altitude']
 		while not done:
 				for event in pygame.event.get():
 						keys = pygame.key.get_pressed()
@@ -66,14 +88,16 @@ class MainThread(Thread):
 							screen.blit(xLabel,(4,14))
 							screen.blit(yLabel,(4,30))
 							screen.blit(zLabel,(4,46))
-						
-
-
 						if event.type == pygame.QUIT:
 								done = True
-						if keys[pygame.K_SPACE]:
+						if keys[pygame.K_SPACE] and not keep_state:
 							paused = not paused
-							if paused: screen.blit(lockedLabel,(4,62))
+							if paused: 
+								screen.blit(lockedLabel,(4,62))
+								with ThreadPoolExecutor(max_workers=1) as executor:
+									x,y,z = pointer[0],pointer[1],z
+									future = executor.submit(self.dbconn.setDroneGoal, getGoalFromCanvasCoords(x,y,z))
+									print(future.result())
 				pygame.display.flip()
 
 """

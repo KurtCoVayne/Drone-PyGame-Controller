@@ -1,6 +1,10 @@
 from dronekit import connect
 
-
+class Goal(object):
+    def __init__(self,x,y,z):
+        self.x=x
+        self.y=y
+        self.z=z
 class DroneHandler(object):
     def __init__(self, drone_conf):
         super().__init__()
@@ -21,6 +25,7 @@ class DroneHandler(object):
             return False
         else:
             return True and self.vehicle.is_armable()
+        
     def setSpeed(self,speed):
         pass
     def setGoal(self,goal):
