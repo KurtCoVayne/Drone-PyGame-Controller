@@ -9,6 +9,7 @@ from drone import DroneHandler,Goal
 import pygame
 from time import sleep
 import math
+from models import *
 from concurrent.futures.thread import ThreadPoolExecutor
 
 
@@ -27,17 +28,22 @@ class ClientThread(Thread):
 		if not (self.droneconn.check() or self.dbconn.check):
 			raise "Drone Connection nor Database Connection didnt work"
 
-class MainThread(Thread):
+class ServerThread(Thread):
 	"""
 	
 	"""
 	
 	def __init__(self, drone_conf, db_conf):
 		super(MainThread,self).__init__()
-		self.dbconn = DatabaseHandler(db_conf)
+		self.dbconn = DatabaseHandler(drone_conf['ID'],db_conf)
 		self.drone_conf = drone_conf
 		if not self.dbconn.check():
 			raise "Drone Connection nor Database Connection didnt work"	
+		#Get drone status here... initial position and set it
+		self.drone = self.dbconn.getDrone()
+		if not drone:
+			raise "Drone not found"
+		
 	def run(self):
 		WHITE = (255, 255, 255)
 		RED   = (255,   0,   0)
@@ -47,17 +53,15 @@ class MainThread(Thread):
 		W=500
 		H=500
 		assert W==H,"El canvas debe ser cuadrado"
-		def getGoalFromCanvasCoords(initialCoordinates,x,y,z):
+		def getOffsets(initialCoordinates,x,y,z):
 			"""
 			W = a metros
 			pixel = x
 			x= pixel*a/W
 			"""
-			lat0 = initialCoordinates[0]
-			lon0 = initialCoordinates[1]
 			pixelEquivalent = lambda pix: pix*self.drone_conf['CanvasMetric']/W
 			
-			return Goal(pixelEquivalent(x),pixelEquivalent(y),pixelEquivalent(z))
+			return (pixelEquivalent(x),pixelEquivalent(y),z)
 
 		screen = pygame.display.set_mode((W, H))
 		done = False
@@ -68,6 +72,14 @@ class MainThread(Thread):
 		z = self.drone_conf['Altitude']
 		while not done:
 				for event in pygame.event.get():
+						if not self.drone.ready:
+							screen.fill([255,255,255])
+							readylabel = myFont.render("DRONE NOT READY", 1, RED)
+							offset = (len("DRONE NOT READY") // 2) * 14
+							screen.blit(readylabel,((W//2) - offset,H//2))
+							sleep(1)
+							self.drone = self.dbconn.getDrone()
+							continue
 						keys = pygame.key.get_pressed()
 						if not paused:
 							screen.fill([0,0,0])
@@ -96,7 +108,10 @@ class MainThread(Thread):
 								screen.blit(lockedLabel,(4,62))
 								with ThreadPoolExecutor(max_workers=1) as executor:
 									x,y,z = pointer[0],pointer[1],z
-									future = executor.submit(self.dbconn.setDroneGoal, getGoalFromCanvasCoords(x,y,z))
+									xi,yi,zi = self.drone.initialpos
+									goal = GeoCoords(xi,yi,zi)+getOffsets(x,y,0)
+									
+									future = executor.submit(self.dbconn.setDrone, )
 									print(future.result())
 				pygame.display.flip()
 
