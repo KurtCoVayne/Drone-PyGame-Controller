@@ -7,7 +7,13 @@ class DroneControllers{
         const {name,initial_pos,goal_pos} = req.body;
 
         const newDrone:IDrone= new DroneModel({
-            name,initial_pos,goal_pos
+            name,
+            initial_pos:{
+                coordinates:initial_pos.split(',').map((i:string)=> parseInt(i))
+            },
+            goal_pos:{
+                coordinates:goal_pos.split(',').map((i:string)=> parseInt(i))
+            }
         });
         await newDrone.save();
         
@@ -22,8 +28,8 @@ class DroneControllers{
 
         if(name!=undefined || name!=null) drone.name=name;
         if(ready!=undefined || ready!=null) drone.ready=ready;
-        if(initial_pos!=undefined || initial_pos!=null) drone.initial_pos.coordinates=initial_pos;
-        if(goal_pos!=undefined || goal_pos!=null) drone.goal_pos.coordinates=goal_pos;
+        if(initial_pos!=undefined || initial_pos!=null) drone.initial_pos.coordinates=initial_pos.split(',').map((i:string)=> parseInt(i));
+        if(goal_pos!=undefined || goal_pos!=null) drone.goal_pos.coordinates=goal_pos.split(',').map((i:string)=> parseInt(i));
 
         await drone.save();
 

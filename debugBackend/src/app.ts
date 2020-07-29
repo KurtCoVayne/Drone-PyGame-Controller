@@ -1,18 +1,16 @@
 import express,{Application} from 'express';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
-import session from 'express-session';
 import cors from 'cors';
 import DroneRoutes from './routes/drone.routes';
-import bodyParser from 'body-parser';
 
 /* Initializations */
 const app:Application=express();
 if(process.env.NODE_ENV === 'dev') require('dotenv').config();
 
 /* Middlewares */
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:false}));
+app.use(express.urlencoded({ extended: true}));
+app.use(express.json());
 app.use(morgan('dev'));
 app.use(cors());
 
