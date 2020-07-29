@@ -4,10 +4,10 @@ import DroneModel,{IDrone} from '../models/drone.model';
 class DroneControllers{
 
     public async add(req:Request,res:Response){
-        const {name,ready,initial_pos,goal_pos} = req.body;
+        const {name,initial_pos,goal_pos} = req.body;
 
         const newDrone:IDrone= new DroneModel({
-            name,ready,initial_pos,goal_pos
+            name,initial_pos,goal_pos
         });
         await newDrone.save();
         
@@ -22,8 +22,8 @@ class DroneControllers{
 
         if(name!=undefined || name!=null) drone.name=name;
         if(ready!=undefined || ready!=null) drone.ready=ready;
-        if(initial_pos!=undefined || initial_pos!=null) drone.initial_pos=initial_pos;
-        if(goal_pos!=undefined || goal_pos!=null) drone.goal_pos=goal_pos;
+        if(initial_pos!=undefined || initial_pos!=null) drone.initial_pos.coordinates=initial_pos;
+        if(goal_pos!=undefined || goal_pos!=null) drone.goal_pos.coordinates=goal_pos;
 
         await drone.save();
 
