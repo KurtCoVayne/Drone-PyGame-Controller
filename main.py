@@ -1,16 +1,14 @@
-import configparser
 import argparse
-from sys import exit
-
-from threading import Thread
-from urllib.parse import quote_plus
-from database import DatabaseHandler
-from drone import DroneHandler,Goal
-import pygame
-from time import sleep
+import configparser
 import math
-from models import *
 from concurrent.futures.thread import ThreadPoolExecutor
+from sys import exit
+from threading import Thread
+from time import sleep
+
+from database import DatabaseHandler
+from drone import DroneHandler, Goal
+from models import *
 
 
 class ClientThread(Thread):
@@ -29,11 +27,13 @@ class ClientThread(Thread):
 			raise "Drone Connection nor Database Connection didnt work"
 
 class ServerThread(Thread):
+	
 	"""
 	
 	"""
 	
 	def __init__(self, drone_conf, db_conf):
+
 		super(MainThread,self).__init__()
 		self.dbconn = DatabaseHandler(drone_conf['ID'],db_conf)
 		self.drone_conf = drone_conf
@@ -45,6 +45,7 @@ class ServerThread(Thread):
 			raise "Drone not found"
 		
 	def run(self):
+		import pygame
 		WHITE = (255, 255, 255)
 		RED   = (255,   0,   0)
 		GREEN = (0  , 255,   0)
@@ -111,7 +112,7 @@ class ServerThread(Thread):
 									xi,yi,zi = self.drone.initialpos
 									goal = GeoCoords(xi,yi,zi)+getOffsets(x,y,0)
 									
-									future = executor.submit(self.dbconn.setDrone, )
+									future = executor.submit(self.dbconn.setDroneGoal, goal)
 									print(future.result())
 				pygame.display.flip()
 

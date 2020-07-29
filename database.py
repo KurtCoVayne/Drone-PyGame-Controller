@@ -27,7 +27,7 @@ class DatabaseHandler(object):
     def setDrone(self,droneState):
         pass
     def setGoalGeoCoord(self, geoCoord: GeoCoord) -> Drone:
-        pass
+        return getDrone()
 
     """
     The actual use of this function is to get the db if a custom query is needed
